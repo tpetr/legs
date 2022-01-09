@@ -61,15 +61,14 @@ class Client:
         self.last_return_rate = None
 
     async def handle_data(self, handle, data):
-        match data[0:2]:
-            case b"\x55\x71":
-                self.last_register = data
-                self.register_event.set()
-            case b"\x55\x61":
-                self.last_packet = unpack_packet(data)
-                self.packet_event.set()
-            case _:
-                pass  # TODO: log
+        if data[0:2] == b"\x55\x71":
+            self.last_register = data
+            self.register_event.set()
+        elif data[0:2] == b"\x55\x61":
+            self.last_packet = unpack_packet(data)
+            self.packet_event.set()
+        else:
+            pass  # TODO: log or something
 
     async def __aenter__(self):
         await self.client.connect()
