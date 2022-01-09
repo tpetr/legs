@@ -1,37 +1,32 @@
 import asyncio
-import csv
 import sys
+import psycopg2
+import os
 
 from client import Packet, Client, ReturnRate
 
 
-class DeltaOfDeltas:
-    def __init__(self):
-        self.last_value = None
-        self.last_delta = None
-
-    def update(self, value):
-        if not self.last_value:
-            self.last_value = (0,) * len(value)
-            self.last_delta = value
-            return value
-        delta = (a - b for a, b in zip(value, self.last_value))
-        delta_of_delta = (a - b for a, b in zip(delta, self.last_delta))
-        self.last_value = value
-        self.last_delta = delta
-        return delta_of_delta
-
-
 async def main():
-    dd = DeltaOfDeltas()
-
-    writer = csv.writer(sys.stdout)
-    writer.writerow(Packet._fields)
-    async with await Client.discover() as c:
-        await c.set_return_rate(ReturnRate.RATE_1HZ)
-        while True:
-            packet = await c.wait_for_packet()
-            writer.writerow(dd.update(packet))
+    with psycopg2.connect(os.environ["DSN"]) as conn:
+        print("Connected")
+        conn.autocommit = True
+        with conn.cursor() as cursor:
+            async with await Client.discover() as c:
+                await c.set_return_rate(ReturnRate.RATE_1HZ)
+                while True:
+                    packet = await c.wait_for_packet()
+                    cursor.execute(
+                        """INSERT INTO legs(time, ax, ay, az, wx, wy, wz, roll, pitch, yaw) VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        packet.ax,
+                        packet.ay,
+                        packet.az,
+                        packet.wx,
+                        packet.wy,
+                        packet.wz,
+                        packet.roll,
+                        packet.pitch,
+                        packet.yaw,
+                    )
 
 
 asyncio.run(main())
