@@ -6,7 +6,7 @@ ANG_VEC_MULTIPLIER = 2000 / 32768
 ANGLE_MULTIPLIER = 180 / 32768
 
 
-Packet = namedtuple("Packet", "timestamp ax ay az wx wy wz roll pitch yaw")
+Packet = namedtuple("Packet", "ax ay az wx wy wz roll pitch yaw")
 
 
 class ReturnRate(enum.IntEnum):

@@ -1,7 +1,6 @@
 import asyncio
 import enum
 import struct
-import time
 from typing import Tuple, Any
 
 from bleak import BleakClient, BleakScanner
@@ -27,7 +26,6 @@ HEADER_BYTES = b"\xFF\xAA"
 def unpack_packet(data) -> Packet:
     ax, ay, az, avx, avy, avz, x, y, z = struct.unpack("<hhhhhhhhh", data[2:])
     return Packet(
-        time.time_ns(),
         ax * ACCEL_MULTIPLIER,
         ay * ACCEL_MULTIPLIER,
         az * ACCEL_MULTIPLIER,
