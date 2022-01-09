@@ -9,6 +9,10 @@ ANGLE_MULTIPLIER = 180 / 32768
 Packet = namedtuple("Packet", "ax ay az wx wy wz roll pitch yaw")
 
 
+class DeviceNotFound(Exception):
+    pass
+
+
 class ReturnRate(enum.IntEnum):
     RATE_TENTH_HZ = 1
     RATE_HALF_HZ = 2

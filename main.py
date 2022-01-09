@@ -6,6 +6,7 @@ import ssl
 from collections import deque
 
 from client import Packet, Client, ReturnRate
+from models import DeviceNotFound
 
 
 async def data_writer(queue):
@@ -30,18 +31,24 @@ async def data_writer(queue):
                     data.append(queue.get_nowait())
                 except asyncio.QueueEmpty:
                     break
-            cursor.executemany(
-                """INSERT INTO legs(time, ax, ay, az, wx, wy, wz, roll, pitch, yaw) VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                data,
-            )
+            if data:
+                cursor.executemany(
+                    """INSERT INTO legs(time, ax, ay, az, wx, wy, wz, roll, pitch, yaw) VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    data,
+                )
 
 
 async def data_collector(queue):
-    async with await Client.discover() as c:
-        await c.set_return_rate(ReturnRate.RATE_10HZ)
-        print("Receiving data...")
-        while True:
-            queue.put_nowait(await c.wait_for_packet())
+    while True:
+        try:
+            async with await Client.discover() as c:
+                await c.set_return_rate(ReturnRate.RATE_10HZ)
+                print("Receiving data...")
+                while True:
+                    queue.put_nowait(await c.wait_for_packet())
+        except DeviceNotFound:
+            print("Device not found, retrying in 5 sec")
+            await asyncio.sleep(5)
 
 
 async def main():

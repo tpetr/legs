@@ -6,6 +6,7 @@ from typing import Tuple, Any
 from bleak import BleakClient, BleakScanner
 
 from models import (
+    DeviceNotFound,
     Register,
     ReturnRate,
     Packet,
@@ -47,7 +48,7 @@ class Client:
                     return cls(scanner.discovered_devices[0])
                 await asyncio.sleep(1)
         if not scanner.discovered_devices:
-            raise Exception("Device not found")
+            raise DeviceNotFound
 
     def __init__(self, device):
         self.client = BleakClient(device)
